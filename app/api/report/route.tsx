@@ -101,10 +101,12 @@ export async function GET(req: Request) {
     </Document>
   );
 
-  // 교체
-  const buf = await pdf(Doc).toBuffer();
-  // Node Buffer → ArrayBuffer (복사 없이 뷰만 슬라이스)
-  const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  // 교체(타입 강제 + ArrayBuffer 변환)
+  const raw = await pdf(Doc).toBuffer();
+  // TS가 ReadableStream으로 오인하는 걸 차단: Buffer(=Uint8Array)로 명시
+  const u8 = raw as unknown as Uint8Array;
+  // Uint8Array → ArrayBuffer (복사 없이 slice)
+  const ab = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
 
   return new Response(ab, {
     headers: {
