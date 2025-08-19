@@ -101,12 +101,12 @@ export async function GET(req: Request) {
     </Document>
   );
 
-  // 교체: 타입 명시 캐스팅으로 TS를 안정화
-  const raw: unknown = await pdf(Doc).toBuffer();
-  // Node 환경에선 Buffer(=Uint8Array 하위)로 옴 → BodyInit 호환으로 캐스팅
-  const body = raw as Uint8Array;
+  // 교체
+  const buf = await pdf(Doc).toBuffer();
+  // Node Buffer → ArrayBuffer (복사 없이 뷰만 슬라이스)
+  const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 
-  return new NextResponse(body, {
+  return new Response(ab, {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': 'inline; filename="GoCyberCheck-Report.pdf"',
