@@ -1,0 +1,15 @@
+// data/improvements.ts
+export const IMP: Record<string, string> = {
+  password_policy: "Enforce ≥12-char passwords with mixed case, numbers, symbols; require periodic rotation.",
+  "2fa": "Enable 2FA (authenticator app/OTP) on email, cloud, accounting and admin accounts.",
+  backup: "Keep redundant backups (cloud/external). Test restore quarterly.",
+  patching: "Turn on automatic updates for OS/browsers/office; monthly server patching window.",
+  endpoint_av: "Standardize AV/EDR on all PCs. Review weekly scan results.",
+  vpn: "Allow remote access only via company VPN with MFA. Avoid public Wi-Fi.",
+  access_review: "Disable accounts on exit immediately; run quarterly access reviews.",
+  email_security: "Provide a phishing-report channel and run quarterly simulations.",
+  logging: "Log logins/admin changes on critical systems and set alerting.",
+  vendor: "Document security requirements in contracts; apply least privilege.",
+  asset: "Maintain a current asset inventory and block unknown devices.",
+  incident: "Document detect→contain→report→recover steps with contacts."
+};
