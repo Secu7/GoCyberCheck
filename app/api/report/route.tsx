@@ -101,11 +101,13 @@ export async function GET(req: Request) {
     </Document>
   );
 
+  // 수정 (★ Buffer → Uint8Array)
   const buffer = await pdf(Doc).toBuffer();
-  return new NextResponse(buffer, {
+  const body = new Uint8Array(buffer);        // ← 타입 호환
+  return new NextResponse(body, {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': 'inline; filename="GoCyberCheck-Report.pdf"'
-    }
+      'Content-Disposition': 'inline; filename="GoCyberCheck-Report.pdf"',
+    },
   });
 }
