@@ -7,6 +7,9 @@ import { pdf, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer
 
 export const runtime = 'nodejs';
 
+type AnswerValue = 'yes' | 'no' | 'unknown';
+type Answer = { key: string; value: AnswerValue };
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const id = url.searchParams.get('id');
@@ -23,79 +26,63 @@ export async function GET(req: Request) {
   const labelByKey = Object.fromEntries(QUESTIONS.map(q => [q.key, q.label]));
   const created = new Date(data.created_at).toLocaleString('en-CA', { timeZone: 'America/Edmonton' });
 
-const styles = StyleSheet.create({
-  page: { padding: 28, fontSize: 11, lineHeight: 1.4 },
+  const styles = StyleSheet.create({
+    page: { padding: 28, fontSize: 11, lineHeight: 1.4 },
+    header: { marginBottom: 16 },
+    brand: { fontSize: 18, fontWeight: 700, marginBottom: 6, lineHeight: 1.2 },
+    sub: { color: '#555', lineHeight: 1.4 },
+    sectionTitle: { fontSize: 13, fontWeight: 700, marginTop: 14, marginBottom: 6 },
+    card: { borderWidth: 1, borderColor: '#ddd', borderRadius: 6, padding: 10, marginBottom: 8 },
+    row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+    k: { color: '#555' },
+    v: { fontWeight: 700 },
+    pillWrap: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+    pill: { borderWidth: 1, borderColor: '#ddd', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, marginRight: 4, marginBottom: 4 },
+    answersHeader: { flexDirection: 'row', borderBottomWidth: 1, borderColor: '#ddd', paddingBottom: 6, marginBottom: 4 },
+    thQ: { width: '70%', fontWeight: 700 },
+    thA: { width: '30%', textAlign: 'right', fontWeight: 700 },
+    ansRow: { flexDirection: 'row', paddingVertical: 3, borderBottomWidth: 1, borderColor: '#f0f0f0' },
+    tdQ: { width: '70%' },
+    tdA: { width: '30%', textAlign: 'right' },
+    yes: { color: '#0a7f2e', fontWeight: 700 },
+    no: { color: '#b00020', fontWeight: 700 },
+    unk: { color: '#666', fontWeight: 700 },
+    footer: { marginTop: 16, borderTopWidth: 1, borderColor: '#eee', paddingTop: 8, color: '#777' }
+  });
 
-  // ↓ 헤더 간격/줄간격 강화
-  header: { marginBottom: 16 },
-  brand: { fontSize: 18, fontWeight: 700, marginBottom: 6, lineHeight: 1.2 },
-  sub: { color: '#555', lineHeight: 1.4 },
-
-  sectionTitle: { fontSize: 13, fontWeight: 700, marginTop: 14, marginBottom: 6 },
-  card: { borderWidth: 1, borderColor: '#ddd', borderRadius: 6, padding: 10, marginBottom: 8 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  k: { color: '#555' },
-  v: { fontWeight: 700 },
-  pillWrap: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
-  pill: { borderWidth: 1, borderColor: '#ddd', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, marginRight: 4, marginBottom: 4 },
-  answersHeader: { flexDirection: 'row', borderBottomWidth: 1, borderColor: '#ddd', paddingBottom: 6, marginBottom: 4 },
-  thQ: { width: '70%', fontWeight: 700 },
-  thA: { width: '30%', textAlign: 'right', fontWeight: 700 },
-  ansRow: { flexDirection: 'row', paddingVertical: 3, borderBottomWidth: 1, borderColor: '#f0f0f0' },
-  tdQ: { width: '70%' },
-  tdA: { width: '30%', textAlign: 'right' },
-  yes: { color: '#0a7f2e', fontWeight: 700 },
-  no: { color: '#b00020', fontWeight: 700 },
-  unk: { color: '#666', fontWeight: 700 },
-  footer: { marginTop: 16, borderTopWidth: 1, borderColor: '#eee', paddingTop: 8, color: '#777' }
-});
-
+  const improvements: string[] = Array.isArray(data.improvements) ? (data.improvements as string[]) : [];
+  const answers: Answer[] = Array.isArray(data.answers) ? (data.answers as Answer[]) : [];
 
   const Doc = (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.brand}>GoCyberCheck — Security Report</Text>
           <Text style={styles.sub}>Generated: {created}  •  Report ID: {String(id).slice(0, 8)}…</Text>
         </View>
 
-        {/* Summary */}
         <View style={styles.card}>
-          <View style={styles.row}>
-            <Text style={styles.k}>Email</Text>
-            <Text style={styles.v}>{data.email}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.k}>Score</Text>
-            <Text style={styles.v}>{data.score}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.k}>Grade</Text>
-            <Text style={styles.v}>{data.grade}</Text>
-          </View>
-          <View style={{ marginTop: 6 }}>
-            <Text>{data.summary}</Text>
-          </View>
+          <View style={styles.row}><Text style={styles.k}>Email</Text><Text style={styles.v}>{data.email}</Text></View>
+          <View style={styles.row}><Text style={styles.k}>Score</Text><Text style={styles.v}>{data.score}</Text></View>
+          <View style={styles.row}><Text style={styles.k}>Grade</Text><Text style={styles.v}>{data.grade}</Text></View>
+          <View style={{ marginTop: 6 }}><Text>{data.summary}</Text></View>
         </View>
 
-        {/* Top fixes */}
         <Text style={styles.sectionTitle}>Top recommended fixes</Text>
         <View style={styles.pillWrap}>
-          {Array.isArray(data.improvements) && data.improvements.map((t: string, i: number) => (
+          {improvements.map((t, i) => (
             <View key={i} style={styles.pill}><Text>{t}</Text></View>
           ))}
         </View>
 
-        {/* Answers */}
-        <Text style={styles.sectionTitle}>Your answers (12 questions)</Text>
+        <Text style={styles.sectionTitle}>Your answers ({answers.length} questions)</Text>
         <View style={styles.answersHeader}>
           <Text style={styles.thQ}>Question</Text>
           <Text style={styles.thA}>Answer</Text>
         </View>
-        {Array.isArray(data.answers) && data.answers.map((a: any, i: number) => {
+        {answers.map((a, i) => {
           const label = labelByKey[a.key] || a.key;
-          const v = String(a.value || 'unknown');
+          const v = a.value;
           const style = v === 'yes' ? styles.yes : v === 'no' ? styles.no : styles.unk;
           const text = v === 'yes' ? 'Yes' : v === 'no' ? 'No' : 'Not sure';
           return (
@@ -106,7 +93,6 @@ const styles = StyleSheet.create({
           );
         })}
 
-        {/* Footer / disclaimer */}
         <View style={styles.footer}>
           <Text>This report is an informational guide only and not legal or compliance advice.</Text>
           <Text>© {new Date().getFullYear()} GoCyberCheck</Text>
@@ -116,7 +102,6 @@ const styles = StyleSheet.create({
   );
 
   const buffer = await pdf(Doc).toBuffer();
-  console.log('[PDF] id=', id, 'bytes=', buffer?.length ?? 0);
   return new NextResponse(buffer, {
     headers: {
       'Content-Type': 'application/pdf',

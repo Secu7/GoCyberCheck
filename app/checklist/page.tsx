@@ -5,6 +5,7 @@ import Turnstile from 'react-turnstile';
 import { QUESTIONS } from '@/data/questions';
 
 type AnswerValue = 'yes' | 'no' | 'unknown';
+type SubmitAPIResponse = { id: string } | { error: string; detail?: string };
 
 export default function ChecklistPage(){
   const total = QUESTIONS.length;
@@ -35,16 +36,18 @@ export default function ChecklistPage(){
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const t: any = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        alert('Submit failed: ' + (t.error || res.status) + (t.detail ? '\n\n' + t.detail : ''));
+      const t = (await res.json().catch(() => null)) as SubmitAPIResponse | null;
+
+      if (!res.ok || !t || 'error' in t) {
+        const msg = t && 'error' in t ? `${t.error}${t.detail ? '\n\n' + t.detail : ''}` : String(res.status);
+        alert('Submit failed: ' + msg);
         setSubmitting(false);
         return;
       }
+
       const { id } = t;
       window.location.href = `/results/${id}`;
-    } catch (e: any) {
-      console.error('fetch failed', e);
+    } catch (_e: unknown) {
       alert('Network error. Is the dev server running? Try again.');
       setSubmitting(false);
     }
@@ -55,7 +58,6 @@ export default function ChecklistPage(){
 
   return (
     <main className="max-w-xl mx-auto p-6">
-      {/* progress */}
       <div className="h-2 bg-gray-200 rounded mb-6 overflow-hidden">
         <div className="h-full bg-black" style={{ width: `${progress}%` }} />
       </div>
@@ -86,7 +88,6 @@ export default function ChecklistPage(){
             onChange={e=>setEmail(e.target.value)}
           />
 
-          {/* Turnstile bot-check */}
           <div className="mb-3">
             <Turnstile
               sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
