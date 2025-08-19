@@ -1,10 +1,17 @@
 // app/results/[id]/page.tsx
 import { sbAdmin } from '@/lib/supabase';
 
-export default async function ResultsPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+type AnswerValue = 'yes' | 'no' | 'unknown';
+type Answer = { key: string; value: AnswerValue };
 
-  // DB에서 보고서 데이터 1건 조회
+export default async function ResultsPage({
+  // ★ Next.js 15: params가 Promise 타입
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params; // ★ Promise 해제
+
   const { data, error } = await sbAdmin()
     .from('assessments')
     .select('*')
@@ -15,10 +22,14 @@ export default async function ResultsPage({ params }: { params: { id: string } }
     return (
       <main className="max-w-xl mx-auto p-6">
         <h1 className="text-xl font-semibold mb-2">Report not found</h1>
-        <p className="text-gray-600">The requested report could not be found. Please try submitting again.</p>
+        <p className="text-gray-600">
+          The requested report could not be found. Please try submitting again.
+        </p>
       </main>
     );
   }
+
+  const answers: Answer[] = Array.isArray(data.answers) ? (data.answers as Answer[]) : [];
 
   return (
     <main className="max-w-xl mx-auto p-6">
@@ -26,15 +37,29 @@ export default async function ResultsPage({ params }: { params: { id: string } }
       <p className="text-gray-600 mb-4">Email: {data.email}</p>
 
       <div className="rounded-xl border p-4 mb-6">
-        <p><b>Score:</b> {data.score} &nbsp; <b>Grade:</b> {data.grade}</p>
-        <p><b>Summary:</b> {data.summary}</p>
+        <p>
+          <b>Score:</b> {data.score} &nbsp; <b>Grade:</b> {data.grade}
+        </p>
+        <p>
+          <b>Summary:</b> {data.summary}
+        </p>
       </div>
 
       <section className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Top recommended fixes</h2>
         <ul className="list-disc pl-5 space-y-1">
-          {Array.isArray(data.improvements) && data.improvements.map((t: string, i: number) => (
-            <li key={i}>{t}</li>
+          {Array.isArray(data.improvements) &&
+            (data.improvements as string[]).map((t, i) => <li key={i}>{t}</li>)}
+        </ul>
+      </section>
+
+      <section className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Your answers ({answers.length})</h2>
+        <ul className="list-disc pl-5 space-y-1">
+          {answers.map((a, i) => (
+            <li key={i}>
+              <b>{a.key}</b>: {a.value === 'yes' ? 'Yes' : a.value === 'no' ? 'No' : 'Not sure'}
+            </li>
           ))}
         </ul>
       </section>
