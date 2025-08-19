@@ -101,17 +101,25 @@ export async function GET(req: Request) {
     </Document>
   );
 
-  // 교체(타입 강제 + ArrayBuffer 변환)
+ // PDF Buffer 생성 코드는 그대로 두고, 반환부만 교체
   const raw = await pdf(Doc).toBuffer();
-  // TS가 ReadableStream으로 오인하는 걸 차단: Buffer(=Uint8Array)로 명시
+  // Node Buffer(=Uint8Array)로 온 바디를 Web ReadableStream에 넣는다.
   const u8 = raw as unknown as Uint8Array;
-  // Uint8Array → ArrayBuffer (복사 없이 slice)
-  const ab = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
 
-  return new Response(ab, {
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(u8);
+      controller.close();
+    }
+  });
+
+  // 표준 Response에 Web Stream을 넣으면 타입/런타임 모두 안전
+  return new Response(stream, {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': 'inline; filename="GoCyberCheck-Report.pdf"',
     },
   });
+
+
 }
