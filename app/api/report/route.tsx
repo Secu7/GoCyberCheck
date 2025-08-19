@@ -101,9 +101,11 @@ export async function GET(req: Request) {
     </Document>
   );
 
-  // 수정 (★ Buffer → Uint8Array)
-  const buffer = await pdf(Doc).toBuffer();
-  const body = new Uint8Array(buffer);        // ← 타입 호환
+  // 교체: 타입 명시 캐스팅으로 TS를 안정화
+  const raw: unknown = await pdf(Doc).toBuffer();
+  // Node 환경에선 Buffer(=Uint8Array 하위)로 옴 → BodyInit 호환으로 캐스팅
+  const body = raw as Uint8Array;
+
   return new NextResponse(body, {
     headers: {
       'Content-Type': 'application/pdf',
